@@ -1,0 +1,26 @@
+# Virtual environment
+.venv/
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Environment variables — never commit API keys
+.env
+.env.*
+
+# Generated audio files (intermediate artifacts)
+*.wav
+
+# IDE
+.idea/
+.vscode/
+
+# pytest cache
+.pytest_cache/
+
+# OS
+.DS_Store
+Thumbs.db
