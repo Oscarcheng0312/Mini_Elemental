@@ -1,4 +1,4 @@
-# mini_elemental
+# Mini_Elemental
 
 An audio/video AI preprocessing microservice built to mirror AWS Elemental's microservice patterns.
 
