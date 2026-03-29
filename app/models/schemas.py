@@ -1,23 +1,26 @@
 from pydantic import BaseModel, field_validator
-import os
+import re
 
 
 class ProcessRequest(BaseModel):
-    file_path: str
+    s3_uri: str
+    output_bucket: str = "mini-aws-elemental-bucket"
 
-    @field_validator("file_path")
+    @field_validator("s3_uri")
     @classmethod
-    def validate_file_path(cls, v: str) -> str:
-        if not os.path.isfile(v):
-            raise ValueError(f"File not found: {v}")
-        if not v.lower().endswith((".mp4", ".mov", ".avi", ".mkv")):
-            raise ValueError(f"Unsupported file type. Expected a video file.")
+    def validate_s3_uri(cls, v: str) -> str:
+        pattern = r"^s3://[a-z0-9][a-z0-9\-\.]{1,61}[a-z0-9]/(.+)$"
+        if not re.match(pattern, v):
+            raise ValueError(
+                f"Invalid S3 URI: {v}. Expected format: s3://bucket-name/key"
+            )
 
         return v
     
 
 class ProcessResponse(BaseModel):
     status: str
-    wav_output_path: str
+    presigned_url: str
     transcript: str
+    expires_in: int
             
