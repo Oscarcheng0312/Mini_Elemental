@@ -3,6 +3,7 @@ from unittest.mock import MagicMock, patch
 from botocore.exceptions import ClientError
 
 from app.services.s3_service import S3Service
+from app.exceptions import S3FileNotFoundError, S3AccessDeniedError
 
 
 def _make_client_error(code: str = "NoSuchKey", operation: str = "GetObject") -> ClientError:
@@ -74,20 +75,27 @@ class TestDownload:
         )
 
     @pytest.mark.asyncio
-    async def test_download_raises_runtime_error_on_client_error(self, service):
+    async def test_download_raises_file_not_found_on_no_such_key(self, service):
         service.client.download_file.side_effect = _make_client_error("NoSuchKey")
 
-        with pytest.raises(RuntimeError, match="S3 download failed"):
+        with pytest.raises(S3FileNotFoundError, match="File not found"):
             await service.download("s3://my-bucket/missing.mp4", "/tmp/missing.mp4")
 
     @pytest.mark.asyncio
-    async def test_download_raises_runtime_error_on_access_denied(self, service):
+    async def test_download_raises_access_denied(self, service):
         service.client.download_file.side_effect = _make_client_error(
             "AccessDenied", "GetObject"
         )
 
-        with pytest.raises(RuntimeError, match="S3 download failed"):
+        with pytest.raises(S3AccessDeniedError, match="Access denied"):
             await service.download("s3://my-bucket/secret.mp4", "/tmp/secret.mp4")
+
+    @pytest.mark.asyncio
+    async def test_download_raises_runtime_error_on_other_client_error(self, service):
+        service.client.download_file.side_effect = _make_client_error("InternalError")
+
+        with pytest.raises(RuntimeError, match="S3 download failed"):
+            await service.download("s3://my-bucket/video.mp4", "/tmp/video.mp4")
 
 
 # ---------------------------------------------------------------------------

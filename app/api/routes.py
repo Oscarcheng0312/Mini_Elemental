@@ -5,6 +5,7 @@ from uuid import uuid4
 
 from fastapi import APIRouter, HTTPException
 
+from app.exceptions import S3FileNotFoundError, S3AccessDeniedError
 from app.models.schemas import ProcessRequest, ProcessResponse
 from app.services.ai_service import OpenAITranscriptionService
 from app.services.ffmpeg_service import FFmpegService
@@ -18,6 +19,11 @@ _ai_service = OpenAITranscriptionService()
 _s3_service = S3Service(region="us-east-1")
 
 PRESIGNED_URL_EXPIRES = 3600 #1 hour
+
+@router.get("/health")
+async def health_check():
+    return {"status": "ok"}
+
 
 @router.post("/process", response_model=ProcessResponse)
 async def process_video(request: ProcessRequest) -> ProcessResponse:
@@ -47,6 +53,12 @@ async def process_video(request: ProcessRequest) -> ProcessResponse:
             presigned_url = _s3_service.generate_presigned_url (
                 request.output_bucket, transcript_key, PRESIGNED_URL_EXPIRES
             )
+    except S3FileNotFoundError as e:
+        logger.warning("S3 file not found: %s", repr(e))
+        raise HTTPException(status_code=404, detail=str(e))
+    except S3AccessDeniedError as e:
+        logger.warning("S3 access denied: %s", repr(e))
+        raise HTTPException(status_code=403, detail=str(e))
     except Exception as e:
         logger.error("Processing failed: type=%s | %s", type(e).__name__, repr(e))
         raise HTTPException(status_code=500, detail=repr(e))

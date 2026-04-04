@@ -4,6 +4,8 @@ import logging
 import boto3
 from botocore.exceptions import ClientError
 
+from app.exceptions import S3FileNotFoundError, S3AccessDeniedError
+
 logger = logging.getLogger(__name__)
 
 class S3Service:
@@ -25,6 +27,11 @@ class S3Service:
             try:
                 self.client.download_file(bucket, key, local_path)
             except ClientError as e:
+                code = e.response["Error"]["Code"]
+                if code in ("NoSuchKey", "404"):
+                    raise S3FileNotFoundError(f"File not found: s3://{bucket}/{key}")
+                if code in ("AccessDenied", "403"):
+                    raise S3AccessDeniedError(f"Access denied to s3://{bucket}/{key}")
                 raise RuntimeError(f"S3 download failed: {e}")
         
         await asyncio.to_thread(_download)
