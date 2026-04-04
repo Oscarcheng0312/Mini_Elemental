@@ -12,6 +12,8 @@ Accepts an S3 URI pointing to a video file, extracts audio using FFmpeg, transcr
 - **boto3 / AWS S3** — Cloud storage (input video + output transcript)
 - **Pydantic v2** — Data validation
 - **pytest + pytest-asyncio** — Unit testing
+- **Docker** — Containerization
+- **GitHub Actions** — CI/CD pipeline (auto-test + auto-push to Docker Hub on every merge to `main`)
 
 ## Project Structure
 
@@ -36,8 +38,15 @@ mini_elemental/
 │   └── test_ai_service.py      # AI Service unit tests
 ├── docs/
 │   └── architecture.png
+├── .github/
+│   └── workflows/
+│       └── ci.yml              # GitHub Actions: run tests → build → push to Docker Hub
 ├── pytest.ini
 ├── requirements.txt
+├── Dockerfile                  # Multi-stage build (builder + runtime)
+├── docker-compose.yml          # Local container orchestration
+├── .dockerignore
+├── .env.example                # Environment variable template (safe to commit)
 └── README.md
 ```
 
@@ -135,6 +144,53 @@ Client receives {"presigned_url": "https://...", "transcript": "...", "expires_i
 | Business Logic | `services/ai_service.py` | Audio → text, Mock/OpenAI interchangeable |
 | API | `api/routes.py` | Orchestrates 5-step pipeline, maps exceptions to HTTP status codes |
 | Entry Point | `main.py` | Assembles the app, lifespan hooks, global exception handlers |
+
+## Docker — Quickstart (Recommended)
+
+The image is published to Docker Hub and includes FFmpeg and all Python dependencies pre-installed. You only need Docker and your own credentials.
+
+### 1. Pull the image
+
+```bash
+docker pull oscarcheng77/mini-elemental:latest
+```
+
+### 2. Create a `.env` file
+
+Copy the template and fill in your real credentials:
+
+```bash
+cp .env.example .env
+```
+
+```
+OPENAI_API_KEY=sk-...
+AWS_ACCESS_KEY_ID=AKIA...
+AWS_SECRET_ACCESS_KEY=...
+AWS_DEFAULT_REGION=us-east-1
+```
+
+> Never commit `.env` to Git — it is listed in `.gitignore`.
+
+### 3. Run the container
+
+```bash
+docker run -p 8000:8000 --env-file .env oscarcheng77/mini-elemental:latest
+```
+
+Open `http://localhost:8000/docs` for the interactive API docs.
+
+---
+
+### Running locally with Docker Compose
+
+If you cloned the repo and want to build from source:
+
+```bash
+docker compose up --build
+```
+
+---
 
 ## Setup
 
