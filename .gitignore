@@ -9,7 +9,6 @@ __pycache__/
 
 # Environment variables — never commit API keys
 .env
-.env.*
 
 # Generated audio files (intermediate artifacts)
 *.wav
