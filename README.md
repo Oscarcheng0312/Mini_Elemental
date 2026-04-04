@@ -1,4 +1,5 @@
 # Mini_AWS_Elemental
+[![CI/CD](https://github.com/Oscarcheng0312/Mini_Elemental/actions/workflows/ci.yml/badge.svg)](https://github.com/Oscarcheng0312/Mini_Elemental/actions/workflows/ci.yml)
 
 An audio/video AI preprocessing microservice built to mirror AWS Elemental's microservice patterns.
 
@@ -202,26 +203,40 @@ Download from [https://www.gyan.dev/ffmpeg/builds/](https://www.gyan.dev/ffmpeg/
 ffmpeg -version
 ```
 
-### 2. Install Python Dependencies
+### 2. Create and Activate a Virtual Environment
 
-```bash
+```powershell
+# Create the virtual environment
+python -m venv .venv
+
+# Activate it (Windows PowerShell)
+.venv\Scripts\Activate.ps1
+```
+
+After activation, your terminal prompt will show `(.venv)` — this confirms the virtual environment is active and all commands will use its Python and packages.
+
+> **Important:** Always activate the virtual environment before running the service or tests. If you skip this step, Python will use the system interpreter which does not have the project dependencies installed.
+
+### 3. Install Python Dependencies
+
+```powershell
 pip install -r requirements.txt
 ```
 
-### 3. Create an AWS S3 Bucket
+### 4. Create an AWS S3 Bucket
 
 1. Log in to [AWS Console](https://console.aws.amazon.com/s3)
 2. Create a bucket (e.g. `mini-aws-elemental-bucket`, region `us-east-1`)
 3. Keep the bucket **private** — do not enable public access
 
-### 4. Create IAM Credentials
+### 5. Create IAM Credentials
 
 1. Go to **IAM → Users → Create user**
 2. Attach policy: `AmazonS3FullAccess`
 3. Under **Security credentials**, create an **Access Key**
 4. Save the `Access Key ID` and `Secret Access Key`
 
-### 5. Set Environment Variables
+### 6. Set Environment Variables
 
 Set all four variables in the **same terminal** where you launch the server:
 
@@ -237,7 +252,9 @@ $env:AWS_DEFAULT_REGION  = "us-east-1"
 
 ## Running the Service
 
-```bash
+Make sure the virtual environment is activated (you should see `(.venv)` in your prompt), then:
+
+```powershell
 uvicorn app.main:app --reload
 ```
 

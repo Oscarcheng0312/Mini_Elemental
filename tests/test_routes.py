@@ -7,20 +7,6 @@ MOCK_TRANSCRIPT = "Hello world"
 MOCK_PRESIGNED_URL = "https://mini-aws-elemental-bucket.s3.amazonaws.com/transcripts/uuid.txt?sig=xxx"
 
 
-def _all_services_mocked(ffmpeg_result=None, transcribe_result=None, s3_error=None, ffmpeg_error=None):
-    """Return a context manager stack that mocks all 5 pipeline steps."""
-    return (
-        patch("app.api.routes._s3_service.download", new=AsyncMock(side_effect=s3_error)),
-        patch("app.api.routes._ffmpeg_service.extract_audio",
-              new=AsyncMock(return_value=ffmpeg_result or MOCK_WAV, side_effect=ffmpeg_error)),
-        patch("app.api.routes._ai_service.transcribe",
-              new=AsyncMock(return_value=transcribe_result or MOCK_TRANSCRIPT)),
-        patch("app.api.routes._s3_service.upload", new=AsyncMock()),
-        patch("app.api.routes._s3_service.generate_presigned_url",
-              return_value=MOCK_PRESIGNED_URL),
-    )
-
-
 @pytest.mark.asyncio
 async def test_process_success(client):
     with patch("app.api.routes._s3_service.download", new=AsyncMock()), \
